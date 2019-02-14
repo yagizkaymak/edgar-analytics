@@ -1,1 +1,1 @@
-This is the directory where your program would find any test input files.
+This is the directory where the "log.csv" and "inactivity_period.txt" files reside.

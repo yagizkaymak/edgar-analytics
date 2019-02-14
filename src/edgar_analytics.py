@@ -1,5 +1,5 @@
 """
-This is the code that reads the EDGAR weblogs and inactivity_time.txt,
+This is the code that reads the EDGAR weblogs and inactivity_period.txt,
 detects the sessions and outputs the results in 'sessionization.txt' file
 
 Author: Yagiz Kaymak
@@ -14,7 +14,7 @@ import sys
 TIMESTAMP_FORMAT = "YYYY-mm-dd HH:MM:SS"
 
 def read_inactivity_time(filename):
-    """ Reads the incactivity_time stored in 'inactivity_time.txt' file """
+    """ Reads the incactivity_time stored in 'inactivity_period.txt' file """
     with open(filename,'r') as f:
         line = f.readline()
         inactivity_time = line.rstrip('\n')
@@ -90,7 +90,7 @@ def main():
     # a list called weblog_list
     weblog_list = read_weblog(log_filename)
 
-    # Read the inactivity time from "inactivity_time.txt" and store it in
+    # Read the inactivity time from "inactivity_period.txt" and store it in
     # a variable called inactivity_time
     inactivity_period_filename = sys.argv[2]
     inactivity_time = int(read_inactivity_time(inactivity_period_filename))

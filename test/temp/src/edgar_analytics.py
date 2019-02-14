@@ -39,6 +39,44 @@ def read_weblog(filename):
         return weblog_list
 
 
+def check_for_inactive_sessions(event_log_dic, date_time, inactivity_time, sessinization_file_handler):
+    # Inactive sessions will be identified every time when we add or modify
+    # the ictionary.
+    # inactive_sessions dictionary will store the inactive sessions to be removed from the
+    # the IP dictionary that stores the identified sessions so far.
+    inactive_sessions = list()
+
+    # Check if all any IP's session expired
+    for IP in event_log_dic:
+        first_webpage_request_datetime = event_log_dic[IP][0]
+        last_webpage_request_datetime = event_log_dic[IP][1]
+        count_of_webpage_requests = event_log_dic[IP][2]
+
+        # Inactivity_gap determines whether to start a new session for this IP
+        inactivity_gap = (date_time - last_webpage_request_datetime).total_seconds()
+
+        # If the time differance between the last webpage access and the current time is larger than inactivity_time
+        # session has ended for this IP. This IP has to be appended to sessionization.txt and removed from
+        # existing IPs dictionary
+        if inactivity_gap > inactivity_time:
+            # Calculate the duration of the session
+            duration_of_the_session = int((last_webpage_request_datetime - first_webpage_request_datetime).total_seconds() + 1)
+
+            # Prepare the output format and append it to the sessionization.txt
+            output = IP + ',' + du.get_datetime_as_str(first_webpage_request_datetime) + ',' + du.get_datetime_as_str(last_webpage_request_datetime) + ',' + str(duration_of_the_session) + ',' + str(count_of_webpage_requests)
+            sessinization_file_handler.write("%s\n" % output)
+            inactive_sessions.append(IP)
+
+
+    # Remove all IPs with expired sessions from the IP dictionary
+    for IP in inactive_sessions:
+        del event_log_dic[IP]
+        print IP + ' has been deleted from event_log_dic\n'
+
+    return event_log_dic
+
+
+
 def main():
     # Get the filename of log file as the first command line argument
     log_filename = sys.argv[1]
@@ -69,6 +107,9 @@ def main():
         date_time_str = log[1] + ' ' + log[2]
         date_time = du.get_string_as_datetime(date_time_str)
 
+        # Before inserting or updating check if there is an expired session
+        event_log_dic = check_for_inactive_sessions(event_log_dic, date_time, inactivity_time, sessinization_file_handler)
+
         # If this IP address does no exist in the dictionary, this is its first apperance.
         # So create an entry for it. Initial values are
         # first access = current_time, last access = current_time, web page access count = 1
@@ -80,42 +121,10 @@ def main():
             event_log_dic[log[0]][1] = date_time # Update this IP's last access time with current time
             event_log_dic[log[0]][2] = event_log_dic[log[0]][2] + 1 # Increment web page access count by one
 
-
-        # Inactive sessions will be identified every time when we add or modify
-        # the ictionary.
-        # inactive_sessions dictionary will store the inactive sessions to be removed from the
-        # the IP dictionary that stores the identified sessions so far.
-        inactive_sessions = list()
-
-        # Check if all any IP's session expired
-        for IP in event_log_dic:
-            first_webpage_request_datetime = event_log_dic[IP][0]
-            last_webpage_request_datetime = event_log_dic[IP][1]
-            count_of_webpage_requests = event_log_dic[IP][2]
-
-            # Inactivity_gap determines whether to start a new session for this IP
-            inactivity_gap = (date_time - last_webpage_request_datetime).total_seconds()
-
-            # If the time differance between the last webpage access and the current time is larger than inactivity_time
-            # session has ended for this IP. This IP has to be appended to sessionization.txt and removed from
-            # existing IPs dictionary
-            if inactivity_gap > inactivity_time:
-                # Calculate the duration of the session
-                duration_of_the_session = int((last_webpage_request_datetime - first_webpage_request_datetime).total_seconds() + 1)
-
-                # Prepare the output format and append it to the sessionization.txt
-                output = IP + ',' + du.get_datetime_as_str(first_webpage_request_datetime) + ',' + du.get_datetime_as_str(last_webpage_request_datetime) + ',' + str(duration_of_the_session) + ',' + str(count_of_webpage_requests)
-                sessinization_file_handler.write("%s\n" % output)
-                inactive_sessions.append(IP)
-
-        # Remove all IPs with expired sessions from the IP dictionary
-        for IP in inactive_sessions:
-            del event_log_dic[IP]
-
+        #event_log_dic = check_for_inactive_sessions(event_log_dic, date_time, inactivity_time, sessinization_file_handler)
 
         # If we reach the end of log file, close all remaining open sessions and write them to sessionization.txt
         if index == len(weblog_list):
-
             # To break the ties with same start time we sort them according to their values
             # values = (first access time, last access time, session duration, and web page count)
             sorted_event_log_list = sorted(event_log_dic.items(), key=operator.itemgetter(1))

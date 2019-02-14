@@ -1,6 +1,10 @@
+#### TO DO: Ordering of the result will be corrected! ###
+
+
 import csv
 import datetime
 import date_utils as du
+import operator
 
 TIMESTAMP_FORMAT = "YYYY-mm-dd HH:MM:SS"
 
@@ -40,12 +44,14 @@ weblog_list = read_weblog(log_filename)
 event_log_dic = {}
 index = 1
 
+date_time_str = weblog_list[0][1] + ' ' + weblog_list[0][2] # Concatenate date and time
+previous_date_time = du.get_string_as_datetime(date_time_str)
+
 
 for log in weblog_list:
 
     date_time_str = log[1] + ' ' + log[2] # Concatenate date and time
     date_time = du.get_string_as_datetime(date_time_str)
-
 
     # If this IP does not exist in the dictionary
     if not log[0] in event_log_dic:
@@ -78,7 +84,7 @@ for log in weblog_list:
             # Calculate the duration of the session
             duration_of_the_session = int((last_webpage_request_datetime - first_webpage_request_datetime).total_seconds() + 1)
 
-            # Prepate the output format and append it to the sessionization.txt
+            # Prepare the output format and append it to the sessionization.txt
             output = log[0] + ',' + du.get_datetime_as_str(first_webpage_request_datetime) + ',' + du.get_datetime_as_str(last_webpage_request_datetime) + ',' + str(duration_of_the_session) + ',' + str(count_of_webpage_requests)
             append_to_sessinization(output)
 
@@ -96,12 +102,22 @@ for log in weblog_list:
 
     # If we reach the end of log file, close all remaining sessions and write them to sessionization.txt
     if index == len(weblog_list):
+
+        # Sort the web page accesses by the values of [start, end , count] tuple
+        # sorted_event_log_dic = sorted(event_log_dic.items(), key=operator.itemgetter(1))
+        #
+        # print type(sorted_event_log_dic)
+
         for IP in event_log_dic:
-            first_webpage_request_datetime = event_log_dic[IP][0]
-            last_webpage_request_datetime = event_log_dic[IP][1]
+            first_webpage_request_datetime = event_log_dic[IP][0] # First access time
+            # print type(first_webpage_request_datetime)
+            last_webpage_request_datetime = event_log_dic[IP][1] # Last access time
+            # print type(last_webpage_request_datetime)
             duration_of_the_session = int((last_webpage_request_datetime - first_webpage_request_datetime).total_seconds() + 1)
-            count_of_webpage_requests = event_log_dic[IP][2]
+            count_of_webpage_requests = event_log_dic[IP][2] # Access count
+            # print type(count_of_webpage_requests)
             output = IP + ',' + du.get_datetime_as_str(first_webpage_request_datetime) + ',' + du.get_datetime_as_str(last_webpage_request_datetime) + ',' + str(duration_of_the_session) + ',' + str(count_of_webpage_requests)
+            print output
             append_to_sessinization(output)
 
     # Increment the line index of log file by one

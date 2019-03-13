@@ -1,7 +1,7 @@
 # Table of Contents
 1. [Author](README.md#author)
 1. [Introduction](README.md#introduction)
-1. [Introduction](README.md#dataset)
+1. [Dataset](README.md#dataset)
 1. [Input](README.md#input)
 1. [Output](README.md#output)
 1. [Running The Code](README.md#running-the-code)
